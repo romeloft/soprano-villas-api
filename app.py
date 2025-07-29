@@ -38,13 +38,17 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
         for villa_div in soup.find_all("div", class_="result-wrapper"):
             name = villa_div.get("data-property-name", "").strip()
             price = villa_div.get("data-price", "").strip()
+
+            # Clean the villa URL
             link_tag = villa_div.find("a", href=True)
             link = link_tag["href"] if link_tag else ""
-            link = link.replace("\\", "").replace("\"", "")  # clean escaped quotes
+            link = link.replace("\\", "").replace("\"", "").replace("\\/", "/")
+
             guests = villa_div.get("data-guests", "")
             bedrooms = villa_div.get("data-rooms", "")
             bathrooms = villa_div.get("data-bathrooms", "")
 
+            # Optional: filter by villa_name
             if villa_name and villa_name.lower() not in name.lower():
                 continue
 
