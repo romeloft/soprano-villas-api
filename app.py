@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 import requests
 from bs4 import BeautifulSoup
+import logging
+
+# Enable logging
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 
@@ -22,14 +26,17 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
 
     try:
         res = requests.get(url, params=params)
-        raw_text = res.text  # Debug: see raw response
 
-        # Return raw response for debugging
+        # Log the full URL and response to Railway logs
+        logging.info(f"Request URL: {res.url}")
+        logging.info(f"Raw Response (first 1000 chars): {res.text[:1000]}")
+
         return {
             "success": False,
             "debug_url": res.url,
-            "raw_response": raw_text[:500]  # first 500 chars only
+            "raw_response": res.text[:500]  # return first 500 chars in the browser
         }
 
     except Exception as e:
+        logging.error(f"Error occurred: {e}")
         return {"success": False, "error": str(e)}
