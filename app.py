@@ -8,12 +8,6 @@ app = FastAPI()
 def home():
     return {"message": "Sopranovillas Price API is running!"}
 
-# Debug IP route (to check Railway server IP)
-@app.get("/debug_ip")
-def debug_ip():
-    ip = requests.get("https://api.ipify.org").text
-    return {"server_ip": ip}
-
 @app.get("/get_price")
 def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name: str = None):
     url = "https://www.sopranovillas.com/wp-admin/admin-ajax.php"
@@ -46,6 +40,7 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
             price = villa_div.get("data-price", "").strip()
             link_tag = villa_div.find("a", href=True)
             link = link_tag["href"] if link_tag else ""
+            link = link.replace("\\", "").replace("\"", "")  # clean escaped quotes
             guests = villa_div.get("data-guests", "")
             bedrooms = villa_div.get("data-rooms", "")
             bathrooms = villa_div.get("data-bathrooms", "")
