@@ -1,6 +1,6 @@
+from fastapi import FastAPI
 import requests
 from bs4 import BeautifulSoup
-from fastapi import FastAPI
 
 app = FastAPI()
 
@@ -34,12 +34,30 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
         html = res.text
         soup = BeautifulSoup(html, "html.parser")
 
-        # Just an example: extract villa results
-        results = []
-        for v in soup.find_all("div", class_="result-wrapper"):
-            results.append(v.get_text(strip=True))
+        villas = []
+        for villa_div in soup.find_all("div", class_="result-wrapper"):
+            name = villa_div.get("data-property-name", "").strip()
+            price = villa_div.get("data-price", "").strip()
+            link_tag = villa_div.find("a", href=True)
+            link = link_tag["href"] if link_tag else ""
+            guests = villa_div.get("data-guests", "")
+            bedrooms = villa_div.get("data-rooms", "")
+            bathrooms = villa_div.get("data-bathrooms", "")
 
-        return {"success": True, "results": results}
+            # Filter by villa name if needed
+            if villa_name and villa_name.lower() not in name.lower():
+                continue
+
+            villas.append({
+                "name": name,
+                "price": price + " €" if price else None,
+                "guests": guests,
+                "bedrooms": bedrooms,
+                "bathrooms": bathrooms,
+                "url": link
+            })
+
+        return {"success": True, "count": len(villas), "results": villas}
 
     except Exception as e:
         return {"success": False, "error": str(e)}
