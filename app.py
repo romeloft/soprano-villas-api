@@ -31,20 +31,21 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
 
         soup = BeautifulSoup(html, "html.parser")
 
-        # Look for results
-        results = []
-        for villa in soup.find_all("div", class_="result-wrapper"):
-            name = villa.get("data-property-name")
-            price = villa.get("data-price")
-            link = villa.find("a", href=True)["href"]
-            if villa_name is None or villa_name.lower() in name.lower():
-                results.append({
-                    "name": name,
-                    "price": price,
-                    "url": link
-                })
+       results = []
+for villa in soup.find_all("div", class_="result-wrapper"):
+    name = villa.get("data-property-name")
+    price = villa.get("data-price")
+    link = villa.find("a", href=True)["href"]
+    if villa_name is None or villa_name.lower() in name.lower():
+        results.append({
+            "name": name,
+            "price": price,
+            "url": link
+        })
 
-        return {"success": True, "results": results}
+return {
+    "success": True,
+    "count": len(results),  # <== show number of results
+    "results": results
+}
 
-    except Exception as e:
-        return {"success": False, "error": str(e)}
