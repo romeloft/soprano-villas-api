@@ -21,31 +21,28 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
     }
 
     try:
-        res = requests.get(url, params=params)
-        data = res.json() if res.headers.get('Content-Type') == 'application/json' else res.text
-
-        if isinstance(data, dict) and "data" in data:
-            html = data["data"]
-        else:
-            html = data
-
+        res = requests.get(url, params=params).json()
+        html = res["data"]
         soup = BeautifulSoup(html, "html.parser")
 
-       results = []
-for villa in soup.find_all("div", class_="result-wrapper"):
-    name = villa.get("data-property-name")
-    price = villa.get("data-price")
-    link = villa.find("a", href=True)["href"]
-    if villa_name is None or villa_name.lower() in name.lower():
-        results.append({
-            "name": name,
-            "price": price,
-            "url": link
-        })
+        results = []
+        for villa in soup.find_all("div", class_="result-wrapper"):
+            name = villa.get("data-property-name")
+            price = villa.get("data-price")
+            link = villa.find("a", href=True)["href"]
+            
+            if villa_name is None or villa_name.lower() in name.lower():
+                results.append({
+                    "name": name,
+                    "price": price,
+                    "url": link
+                })
 
-return {
-    "success": True,
-    "count": len(results),  # <== show number of results
-    "results": results
-}
+        return {
+            "success": True,
+            "count": len(results),
+            "results": results
+        }
 
+    except Exception as e:
+        return {"success": False, "error": str(e)}
