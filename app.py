@@ -43,3 +43,10 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+@app.get("/debug_ip")
+def debug_ip():
+    import requests
+    ip = requests.get("https://api.ipify.org").text
+    return {"server_ip": ip}
+
