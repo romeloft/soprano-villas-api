@@ -1,13 +1,3 @@
-from fastapi import FastAPI
-from bs4 import BeautifulSoup
-import cloudscraper
-
-app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"message": "Sopranovillas Price API is running!"}
-
 @app.get("/get_price")
 def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name: str = None):
     url = "https://www.sopranovillas.com/wp-admin/admin-ajax.php"
@@ -23,14 +13,20 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
     try:
         scraper = cloudscraper.create_scraper()
         res = scraper.get(url, params=params)
-        
-        # Debugging if response is empty
+
+        # If Cloudflare is blocking, we’ll get a debug response
+        debug_info = {
+            "debug_url": res.url,
+            "status_code": res.status_code,
+            "headers": dict(res.headers),
+            "raw_response_start": res.text[:500]  # first 500 chars only
+        }
+
         if res.status_code != 200:
-            return {"success": False, "error": f"Bad status: {res.status_code}", "raw": res.text}
+            return {"success": False, "error": "Bad status", "debug": debug_info}
 
-        html = res.text
-        soup = BeautifulSoup(html, "html.parser")
-
+        # Try parsing HTML
+        soup = BeautifulSoup(res.text, "html.parser")
         results = []
         for v in soup.find_all("div", class_="result-wrapper"):
             villa_name_elem = v.find("h3")
@@ -40,6 +36,9 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
                     "name": villa_name_elem.get_text(strip=True),
                     "price": price_elem.get_text(strip=True)
                 })
+
+        if not results:
+            return {"success": False, "error": "No villas parsed", "debug": debug_info}
 
         return {"success": True, "results": results}
 
