@@ -1,10 +1,6 @@
 from fastapi import FastAPI
-import requests
 from bs4 import BeautifulSoup
-import logging
-
-# Enable logging
-logging.basicConfig(level=logging.INFO)
+import cloudscraper
 
 app = FastAPI()
 
@@ -25,18 +21,27 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
     }
 
     try:
-        res = requests.get(url, params=params)
+        scraper = cloudscraper.create_scraper()
+        res = scraper.get(url, params=params)
+        
+        # Debugging if response is empty
+        if res.status_code != 200:
+            return {"success": False, "error": f"Bad status: {res.status_code}", "raw": res.text}
 
-        # Log the full URL and response to Railway logs
-        logging.info(f"Request URL: {res.url}")
-        logging.info(f"Raw Response (first 1000 chars): {res.text[:1000]}")
+        html = res.text
+        soup = BeautifulSoup(html, "html.parser")
 
-        return {
-            "success": False,
-            "debug_url": res.url,
-            "raw_response": res.text[:500]  # return first 500 chars in the browser
-        }
+        results = []
+        for v in soup.find_all("div", class_="result-wrapper"):
+            villa_name_elem = v.find("h3")
+            price_elem = v.find("span", class_="price")
+            if villa_name_elem and price_elem:
+                results.append({
+                    "name": villa_name_elem.get_text(strip=True),
+                    "price": price_elem.get_text(strip=True)
+                })
+
+        return {"success": True, "results": results}
 
     except Exception as e:
-        logging.error(f"Error occurred: {e}")
         return {"success": False, "error": str(e)}
