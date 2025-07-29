@@ -21,27 +21,14 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
     }
 
     try:
-        res = requests.get(url, params=params).json()
-        html = res["data"]
-        soup = BeautifulSoup(html, "html.parser")
+        res = requests.get(url, params=params)
+        raw_text = res.text  # Debug: see raw response
 
-        results = []
-        for villa in soup.find_all("div", class_="result-wrapper"):
-            name = villa.get("data-property-name")
-            price = villa.get("data-price")
-            link = villa.find("a", href=True)["href"]
-            
-            if villa_name is None or villa_name.lower() in name.lower():
-                results.append({
-                    "name": name,
-                    "price": price,
-                    "url": link
-                })
-
+        # Return raw response for debugging
         return {
-            "success": True,
-            "count": len(results),
-            "results": results
+            "success": False,
+            "debug_url": res.url,
+            "raw_response": raw_text[:500]  # first 500 chars only
         }
 
     except Exception as e:
