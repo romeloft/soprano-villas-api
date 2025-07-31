@@ -20,13 +20,13 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
         "adults": adults
     }
 
-    # Headers include Cloudflare bypass
+    # Headers (with Cloudflare bypass header)
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5",
         "Referer": "https://www.sopranovillas.com/",
-        "x-api-secret": "supersecretkey123"  # <-- Cloudflare bypass header
+        "x-api-secret": "supersecretkey123"  # <--- Cloudflare bypass header
     }
 
     try:
@@ -41,16 +41,16 @@ def get_price(region: str, checkin: str, checkout: str, adults: int, villa_name:
             name = villa_div.get("data-property-name", "").strip()
             price = villa_div.get("data-price", "").strip()
 
-            # Get the villa link
+            # Villa URL
             link_tag = villa_div.find("a", href=True)
             link = link_tag["href"] if link_tag else ""
-            link = link.replace("\\\"", "").replace("\"", "")
+            link = link.replace("\\", "").replace("\"", "")
 
             guests = villa_div.get("data-guests", "")
             bedrooms = villa_div.get("data-rooms", "")
             bathrooms = villa_div.get("data-bathrooms", "")
 
-            # Optional: filter by villa_name
+            # Filter by villa name if provided
             if villa_name and villa_name.lower() not in name.lower():
                 continue
 
